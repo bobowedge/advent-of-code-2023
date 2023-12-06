@@ -20,8 +20,8 @@ def parse_data2(d):
 def ways_to_beat(t, d):
     # Solve (time - held) * held - distance = 0 for held
     # h^2 - t * h + d = 0
-    h1 = (t - sqrt(t*t - 4*d))/2
-    h2 = (t + sqrt(t*t - 4*d))/2
+    h1 = (t - sqrt(t * t - 4 * d))/2
+    h2 = (t + sqrt(t * t - 4 * d))/2
     h1 = floor(h1 + 1)
     h2 = ceil(h2 - 1)
     return h2 - h1 + 1
