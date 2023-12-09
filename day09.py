@@ -2,7 +2,7 @@ def reduce(seq):
     return [seq[i+1] - seq[i] for i in range(len(seq)-1)]
 
 
-def extrapolate1(seq):
+def get_subseq(seq):
     subseq = [seq]
     lss = len(set(seq))
     while lss > 1:
@@ -10,6 +10,11 @@ def extrapolate1(seq):
         lss = len(set(new_seq))
         subseq.append(new_seq)
     subseq.reverse()
+    return subseq
+
+
+def extrapolate1(seq):
+    subseq = get_subseq(seq)
     val = 0
     for seq in subseq:
         val += seq[-1]
@@ -17,13 +22,7 @@ def extrapolate1(seq):
 
 
 def extrapolate2(seq):
-    subseq = [seq]
-    lss = len(set(seq))
-    while lss > 1:
-        new_seq = reduce(subseq[-1])
-        lss = len(set(new_seq))
-        subseq.append(new_seq)
-    subseq.reverse()
+    subseq = get_subseq(seq)
     val = 0
     for seq in subseq:
         val = seq[0] - val
