@@ -123,7 +123,7 @@ def add_to_outsides(pt, loop, nrows, ncols, oset):
         oset.add(pt)
 
 
-def solution2(d):
+def orig_solution2(d):
     start, pipes = matrix(d)
     num_rows = len(pipes)
     num_cols = len(pipes[0])
@@ -186,8 +186,48 @@ def solution2(d):
             if (row, col, 0, 0) not in loop_with_midpoints and (row, col, 0, 0) not in outsides:
                 inside_counts += 1
     return inside_counts
-    
-    
+
+
+def solution2(d):
+    start, pipes = matrix(d)
+    num_rows = len(pipes)
+    num_cols = len(pipes[0])
+
+    start_pipe, loop = find_loop(start, pipes)
+    loop = set(loop)
+    loop_midpoints = set()
+    for (row, col) in loop:
+        if (row, col) == start:
+            pipe = start_pipe
+        else:
+            pipe = pipes[row][col]
+        # Add all possible midpoints between pipes
+        if pipe in '|LJ':
+            loop_midpoints.add((row, col, -1, 0))
+        if pipe in '|F7':
+            loop_midpoints.add((row, col, 1, 0))
+        if pipe in '-J7':
+            loop_midpoints.add((row, col, 0, -1))
+        if pipe in '-LF':
+            loop_midpoints.add((row, col, 0, 1))
+
+    # Ray casting algorithm through midpoints
+    inside_count = 0
+    outside_count = 0
+    for row in range(num_rows):
+        for col in range(num_cols):
+            if (row, col) not in loop:
+                counter = 0
+                for r in range(row):
+                    if (r, col, 0, 1) in loop_midpoints:
+                        counter += 1
+                if counter % 2 == 1:
+                    inside_count += 1
+                else:
+                    outside_count += 1
+    return inside_count
+
+
 test1 = """-L|F7
 7S-7|
 L|7||
