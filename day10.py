@@ -1,4 +1,7 @@
-def pipe_ize(d):
+def matrix(d):
+    """
+    Turn data into matrix and find start
+    """
     pipes = []
     start = None
     for i, line in enumerate(d):
@@ -10,8 +13,15 @@ def pipe_ize(d):
 
 
 def find_loop(start, pipes):
+    """
+    Find the main loop, given the start and the pipe matrix
+    Also, give the pipe type of the start
+    """
+    # Four directions to search from start
     directions = [(1, 0), (0, -1), (-1, 0), (0, 1)]
     loops = [[], [], [], []]
+
+    # Try to build a loop in each direction (two should be successful)
     for i, loop in enumerate(loops):
         loops[i].append(start)
         curr = (start[0] + directions[i][0], start[1] + directions[i][1])
@@ -25,6 +35,7 @@ def find_loop(start, pipes):
             row_diff = curr[0] - prev[0]
             col_diff = curr[1] - prev[1]
             prev = curr
+            # previous pipe was above
             if row_diff == 1:
                 if pipe == '|':
                     curr = (curr[0] + 1, curr[1])
@@ -34,6 +45,7 @@ def find_loop(start, pipes):
                     curr = (curr[0], curr[1] - 1)
                 else:
                     curr = None
+            # previous pipe was below
             elif row_diff == -1:
                 if pipe == '|':
                     curr = (curr[0] - 1, curr[1])
@@ -43,6 +55,7 @@ def find_loop(start, pipes):
                     curr = (curr[0], curr[1] + 1)
                 else:
                     curr = None
+            # previous pipe was left
             elif col_diff == 1:
                 if pipe == '-':
                     curr = (curr[0], curr[1] + 1)
@@ -52,6 +65,7 @@ def find_loop(start, pipes):
                     curr = (curr[0] - 1, curr[1])
                 else:
                     curr = None
+            # previous pipe was right
             else:
                 if pipe == '-':
                     curr = (curr[0], curr[1] - 1)
@@ -61,7 +75,9 @@ def find_loop(start, pipes):
                     curr = (curr[0] - 1, curr[1])
                 else:
                     curr = None
+        # Back to start
         if curr == start:
+            # Determine starting pipe from last and first pipes in loop
             if (curr[0] - prev[0]) == 1:
                 if (loops[i][1][1] - curr[1]) == 1:
                     start_pipe = 'L'
@@ -95,33 +111,43 @@ def find_loop(start, pipes):
 
 
 def solution1(d):
-    start, pipes = pipe_ize(d)
+    start, pipes = matrix(d)
     _, loop = find_loop(start, pipes)
     return len(loop) // 2
 
 
+def add_to_outsides(pt, loop, nrows, ncols, oset):
+    if((-1 < pt[0] < nrows + 1) and
+       (-1 < pt[1] < ncols + 1) and
+       (pt not in loop)):
+        oset.add(pt)
+
+
 def solution2(d):
-    start, pipes = pipe_ize(d)
+    start, pipes = matrix(d)
     num_rows = len(pipes)
     num_cols = len(pipes[0])
 
     start_pipe, loop = find_loop(start, pipes)
     loop = set(loop)
-    midloop = set()
+    loop_with_midpoints = set()
     for (row, col) in loop:
-        midloop.add((row, col, 0, 0))
+        loop_with_midpoints.add((row, col, 0, 0))
         if (row, col) == start:
             pipe = start_pipe
         else:
             pipe = pipes[row][col]
+        # Add all possible midpoints between pipes
         if pipe in '|LJ':
-            midloop.add((row, col, -1, 0))
+            loop_with_midpoints.add((row, col, -1, 0))
         if pipe in '|F7':
-            midloop.add((row, col, 1, 0))
+            loop_with_midpoints.add((row, col, 1, 0))
         if pipe in '-J7':
-            midloop.add((row, col, 0, -1))
+            loop_with_midpoints.add((row, col, 0, -1))
         if pipe in '-LF':
-            midloop.add((row, col, 0, 1))
+            loop_with_midpoints.add((row, col, 0, 1))
+
+    # Find the initial outsides (the edges not in the loop)
     outsides = set()
     for row in [0, num_rows - 1]:
         for col in range(num_cols):
@@ -131,42 +157,33 @@ def solution2(d):
         for row in range(num_rows):
             if (row, col) not in loop:
                 outsides.add((row, col, 0, 0))
+
+    # For each new point found in the last iteration, add the possible adjacent points
+    # Continue until no new points are added
     new_points = set(outsides)
     while len(new_points) > 0:
         old_outsides = set(outsides)
         for (row, col, r2, c2) in new_points:
             if r2 == 0 and c2 == 0:
+                # Full points in all directions (including diagonals)
                 for (x, y) in [(-1, 0), (1, 0), (0, 1), (0, -1), (-1, -1), (1, -1), (-1, 1), (1, 1)]:
                     val = (row + x, col + y, r2, c2)
-                    if ((-1 < val[0] < num_rows + 1) and
-                            (-1 < val[1] < num_cols + 1) and
-                            (val not in midloop)):
-                        outsides.add(val)
-            for x2 in [-1, 1]:
-                val = (row, col, r2 + x2, c2)
-                if val[2] == -2:
-                    val = (row - 1, col, 0, c2)
-                elif val[2] == 2:
-                    val = (row + 1, col, 0, c2)
-                if ((-1 < val[0] < num_rows + 1) and
-                        (-1 < val[1] < num_cols + 1) and
-                        (val not in midloop)):
-                    outsides.add(val)
-            for y2 in [-1, 1]:
-                val = (row, col, r2, c2 + y2)
-                if val[3] == -2:
-                    val = (row, col - 1, r2, 0)
-                elif val[3] == 2:
-                    val = (row, col + 1, r2, 0)
-                if ((-1 < val[0] < num_rows + 1) and
-                        (-1 < val[1] < num_cols + 1) and
-                        (val not in midloop)):
-                    outsides.add(val)
+                    add_to_outsides(val, loop_with_midpoints, num_rows, num_cols, outsides)
+            # Half points left, right, up, or down
+            for (x2, y2) in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
+                val = (row, col, r2 + x2, c2 + y2)
+                if val[2] == -2 or val[2] == 2:
+                    val = (row + x2, col, 0, c2)
+                elif val[3] == -2 or val[3] == 2:
+                    val = (row, col + y2, r2, 0)
+                add_to_outsides(val, loop_with_midpoints, num_rows, num_cols, outsides)
         new_points = outsides.difference(old_outsides)
+
+    # Inside points are all those not in the loop and not in the outside set
     inside_counts = 0
     for row in range(len(pipes)):
         for col in range(len(pipes[0])):
-            if (row, col) not in loop and (row, col, 0, 0) not in outsides:
+            if (row, col, 0, 0) not in loop_with_midpoints and (row, col, 0, 0) not in outsides:
                 inside_counts += 1
     return inside_counts
     
