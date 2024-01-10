@@ -57,25 +57,36 @@ def flip_cond(cond):
     else:
         raise RuntimeError(cond)
 
+
 def solution2(d):
     workflows, _ = parse_input(d)
     paths = [('in', [])]
     possibles = []
+
+    # Find all the valid paths through the parts
     while len(paths) > 0:
+        # Destination and conditions to get here
         currd, currc = paths.pop(0)
+        # Stores the built up conditions
         flips = list(currc)
+        # Workflow for this part
         for condition, nextd in workflows[currd]:
+            # New set of conditions to go to nextd
             newc = list(flips)
             if condition != 'True':
+                # Add the current condition
                 newc.append(condition)
+                # Flip it for the next steps
                 flips.append(flip_cond(condition))
             if nextd == 'A':
+                # Done, add to possibles set
                 possibles.append(newc)
             elif nextd != 'R':
+                # Continue to next destination
                 paths.append((nextd, newc))
-        _, nextd = workflows[currd][-1]
 
     total = 0
+    # Each set of conditions in possibles is mutually exclusive
     for pl in possibles:
         xrange = [0, 4001]
         srange = [0, 4001]
@@ -105,7 +116,6 @@ def solution2(d):
                       (srange[1] - srange[0] - 1) *
                       (mrange[1] - mrange[0] - 1) *
                       (arange[1] - arange[0] - 1))
-    print(total)
     return total
     
     
